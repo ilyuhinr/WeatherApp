@@ -16,11 +16,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="ru.example.weatherapp.services.WeatherService"
+            android:enabled="true" />
+
+        <provider
+            android:name="ru.example.weatherapp.database.WeatherProvider"
+            android:authorities="com.example.weatherApp"
+            android:exported="false" />
     </application>
-
-    <provider
-        android:name="ru.example.weatherapp.WeatherProvider"
-        android:authorities="com.example.weatherApp"
-        android:exported="false" />
-
 </manifest>

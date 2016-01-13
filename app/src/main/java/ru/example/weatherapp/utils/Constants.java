@@ -4,6 +4,18 @@ public class Constants {
     public static String URL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Россия%2C%20Брянск%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     public static String DATABASE_NAME = "weather";
     public static int DATABASE_VERSION = 1;
+    public static String ASTRONOMY_TABLE_NAME = "astronomy";
+    public static String ATMOSPHERE_TABLE_NAME = "atmosphere";
+    public static String CHANEL_TABLE_NAME = "chanel";
+    public static String CONDITION_TABLE_NAME = "condition";
+    public static String FORECAST_TABLE_NAME = "forecast";
+    public static String IMAGE_TABLE_NAME = "image";
+    public static String ITEM_TABLE_NAME = "item";
+    public static String LOCATION_TABLE_NAME = "location";
+    public static String UNITS_TABLE_NAME = "units";
+    public static String WIND_TABLE_NAME = "wind";
+    public static String CITY_TABLE_NAME = "city";
+
     public static String SQL_LITE_CREATE_TABLE_SCRIPT =
             "CREATE TABLE IF NOT EXISTS astronomy (" +
                     "  id integer primary key autoincrement,\n" +
@@ -116,6 +128,13 @@ public class Constants {
                     "  chill integer NOT NULL DEFAULT '0',\n" +
                     "  direction integer NOT NULL DEFAULT '0',\n" +
                     "  speed float NOT NULL DEFAULT '0'\n" +
+                    ") \n" +
+                    "CREATE TABLE IF NOT EXISTS city (" +
+                    "  id integer primary key autoincrement,\n" +
+                    "  cityName integer NOT NULL DEFAULT '0',\n" +
+                    "  country varchar NOT NULL" +
+                    "  geoLat float NOT NULL,\n" +
+                    "  geoLong float NOT NULL,\n" +
                     "  \n" +
-                    ") ;\n";
+                    ")";
 }
