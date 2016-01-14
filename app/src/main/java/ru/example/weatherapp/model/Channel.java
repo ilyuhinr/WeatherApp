@@ -3,8 +3,6 @@
  */
 package ru.example.weatherapp.model;
 
-import java.util.Date;
-
 public class Channel {
 
     public String title;

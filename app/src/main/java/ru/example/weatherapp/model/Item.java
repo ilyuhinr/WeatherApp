@@ -3,7 +3,6 @@
  */
 package ru.example.weatherapp.model;
 
-import java.util.Date;
 import java.util.List;
 
 public class Item {

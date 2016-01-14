@@ -16,9 +16,9 @@ import ru.example.weatherapp.utils.Constants;
 
 public class WeatherProvider extends ContentProvider {
     private String LOG_TAG = getClass().getName();
-    static final String AUTHORITY = "com.example.weatherApp";
+    public static final String AUTHORITY = "com.example.weatherApp";
 
-    static final String PATH_INFO = "weather";
+    public static final String PATH_INFO = "weather";
     public static final Uri WEATHER_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + PATH_INFO);
     static final String WEATHER_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
@@ -146,6 +146,7 @@ public class WeatherProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         Log.d(LOG_TAG, "insert, " + uri.toString());
+        Uri resultUri = null;
         String table = "";
         switch (sUriMatcher.match(uri)) {
             case URI_CHANEL:
@@ -187,11 +188,10 @@ public class WeatherProvider extends ContentProvider {
         if (!table.isEmpty()) {
             SQLiteDatabase sqLiteDatabase = mDatabaseHelper.getWritableDatabase();
             long id = sqLiteDatabase.insert(table, null, values);
-            Uri resultUri = ContentUris.withAppendedId(WEATHER_CONTENT_URI, id);
-            getContext().getContentResolver().notifyChange(resultUri, null);
-            return resultUri;
+            resultUri = ContentUris.withAppendedId(Constants.ASTRONOMY_CONTENT_URI, id);
+            getContext().getContentResolver().notifyChange(resultUri, null, false);
         }
-        return null;
+        return resultUri;
     }
 
     @Override
@@ -212,7 +212,20 @@ public class WeatherProvider extends ContentProvider {
         }
 
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_SCRIPT);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_ASTRONOMY);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_ATMOSPHERE);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_CONDITION);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_ITEM);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_FORECAST);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_CITY);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_IMAGE);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_LOCATION);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_UNITS);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_WIND);
+            db.execSQL(Constants.SQL_LITE_CREATE_TABLE_CHANNEL);
+            Log.i(DatabaseHelper.class.getName(),
+                    "Create tables database!");
+
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

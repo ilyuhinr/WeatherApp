@@ -1,6 +1,11 @@
 package ru.example.weatherapp.utils;
 
+import android.net.Uri;
+
+import ru.example.weatherapp.database.WeatherProvider;
+
 public class Constants {
+
     public static String URL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Россия%2C%20Брянск%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     public static String DATABASE_NAME = "weather";
     public static int DATABASE_VERSION = 1;
@@ -15,27 +20,33 @@ public class Constants {
     public static String UNITS_TABLE_NAME = "units";
     public static String WIND_TABLE_NAME = "wind";
     public static String CITY_TABLE_NAME = "city";
+    public static final Uri CITY_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.CITY_TABLE_NAME);
+    public static final Uri ASTRONOMY_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.ASTRONOMY_TABLE_NAME);
 
-    public static String SQL_LITE_CREATE_TABLE_SCRIPT =
+    public static String SQL_LITE_CREATE_TABLE_ASTRONOMY =
             "CREATE TABLE IF NOT EXISTS astronomy (" +
                     "  id integer primary key autoincrement,\n" +
-                    "  sunrise varchar NOT NULL DEFAULT '0',\n" +
-                    "  sunset varchar NOT NULL DEFAULT '0'\n" +
+                    "  sunrise varchar NOT NULL,\n" +
+                    "  sunset varchar NOT NULL\n" +
                     "  \n" +
-                    "); " +
-                    "CREATE TABLE IF NOT EXISTS atmosphere (\n" +
+                    ");";
+    public static String SQL_LITE_CREATE_TABLE_ATMOSPHERE =
+            "CREATE TABLE IF NOT EXISTS atmosphere (\n" +
                     "  id integer primary key autoincrement,\n" +
-                    "  humidity integer NOT NULL DEFAULT '0',\n" +
-                    "  visibility float NOT NULL DEFAULT '0',\n" +
-                    "  pressure float NOT NULL DEFAULT '0',\n" +
-                    "  rising integer NOT NULL DEFAULT '0'\n" +
+                    "  humidity integer NOT NULL,\n" +
+                    "  visibility float NOT NULL,\n" +
+                    "  pressure float NOT NULL,\n" +
+                    "  rising integer NOT NULL\n" +
                     "  \n" +
-                    "); " +
-                    "CREATE TABLE IF NOT EXISTS chanel (\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_CHANNEL =
+            "CREATE TABLE IF NOT EXISTS chanel (\n" +
                     "  id integer primary key autoincrement,\n" +
-                    "  title varchar NOT NULL DEFAULT '0',\n" +
-                    "  link varchar NOT NULL DEFAULT '0',\n" +
-                    "  language varchar NOT NULL DEFAULT '0',\n" +
+                    "  title varchar NOT NULL,\n" +
+                    "  link varchar NOT NULL,\n" +
+                    "  language varchar NOT NULL,\n" +
                     "  description text NOT NULL,\n" +
                     "  lastBuildDate date NOT NULL,\n" +
                     "  ttl float NOT NULL,\n" +
@@ -46,46 +57,39 @@ public class Constants {
                     "  image_id integer DEFAULT NULL,\n" +
                     "  item_id integer DEFAULT NULL,\n" +
                     "  atmosphere_id integer DEFAULT NULL,\n" +
-                    "  ,\n" +
-                    "  KEY FK_chanel_location (location_id),\n" +
-                    "  KEY FK_chanel_units (units_id),\n" +
-                    "  KEY FK_chanel_wind (wind_id),\n" +
-                    "  KEY FK_chanel_astronomy (astronomy_id),\n" +
-                    "  KEY FK_chanel_image (image_id),\n" +
-                    "  KEY FK_chanel_item (item_id),\n" +
-                    "  KEY FK_chanel_atmosphere (atmosphere_id),\n" +
-                    "  CONSTRAINT FK_chanel_astronomy FOREIGN KEY (astronomy_id) REFERENCES astronomy (id),\n" +
-                    "  CONSTRAINT FK_chanel_atmosphere FOREIGN KEY (atmosphere_id) REFERENCES atmosphere (id),\n" +
-                    "  CONSTRAINT FK_chanel_image FOREIGN KEY (image_id) REFERENCES image (id),\n" +
-                    "  CONSTRAINT FK_chanel_item FOREIGN KEY (item_id) REFERENCES item (id),\n" +
-                    "  CONSTRAINT FK_chanel_location FOREIGN KEY (location_id) REFERENCES location (id),\n" +
-                    "  CONSTRAINT FK_chanel_units FOREIGN KEY (units_id) REFERENCES units (id),\n" +
-                    "  CONSTRAINT FK_chanel_wind FOREIGN KEY (wind_id) REFERENCES wind (id)\n" +
-                    ") " +
-                    "CREATE TABLE IF NOT EXISTS condition (\n" +
+                    "  FOREIGN KEY (astronomy_id) REFERENCES astronomy (id),\n" +
+                    "  FOREIGN KEY (atmosphere_id) REFERENCES atmosphere (id),\n" +
+                    "  FOREIGN KEY (image_id) REFERENCES image (id),\n" +
+                    "  FOREIGN KEY (item_id) REFERENCES item (id),\n" +
+                    "  FOREIGN KEY (location_id) REFERENCES location (id),\n" +
+                    "  FOREIGN KEY (units_id) REFERENCES units (id),\n" +
+                    "  FOREIGN KEY (wind_id) REFERENCES wind (id)\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_CONDITION =
+            "CREATE TABLE IF NOT EXISTS condition (\n" +
                     "  id integer primary key autoincrement,\n" +
                     "  text text NOT NULL,\n" +
                     "  code integer NOT NULL,\n" +
                     "  temp integer NOT NULL,\n" +
-                    "  date date NOT NULL,\n" +
-                    "  item_id integer NOT NULL DEFAULT '0',\n" +
-                    "  ,\n" +
-                    "  KEY FK_condition_item (item_id),\n" +
-                    "  CONSTRAINT FK_condition_item FOREIGN KEY (item_id) REFERENCES item (id)\n" +
-                    ") " +
-
-                    "CREATE TABLE IF NOT EXISTS forecast (\n" +
-                    "  id integer unsigned NOT NULL AUTO_INCREMENT,\n" +
+                    "  date date NOT NULL\n" +
+                    /*"  item_id integer NOT NULL,\n" +
+                    "  FOREIGN KEY (item_id) REFERENCES item (id)\n" +*/
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_FORECAST =
+            "CREATE TABLE IF NOT EXISTS forecast (\n" +
+                    "  id integer primary key autoincrement,\n" +
                     "  day varchar NOT NULL,\n" +
                     "  date date NOT NULL,\n" +
                     "  low integer NOT NULL,\n" +
                     "  high integer NOT NULL,\n" +
                     "  text text NOT NULL,\n" +
-                    "  code integer NOT NULL\n" +
+                    "  code integer NOT NULL,\n" +
+                    "  item_id integer NOT NULL,\n" +
+                    "  FOREIGN KEY (item_id) REFERENCES item (id)\n" +
                     "  \n" +
-                    ") "
-                    +
-                    "CREATE TABLE IF NOT EXISTS image (\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_IMAGE =
+            "CREATE TABLE IF NOT EXISTS image (\n" +
                     "  id integer primary key autoincrement,\n" +
                     "  title text NOT NULL,\n" +
                     "  link varchar(100) NOT NULL,\n" +
@@ -93,48 +97,67 @@ public class Constants {
                     "  width integer NOT NULL,\n" +
                     "  height integer NOT NULL\n" +
                     "  \n" +
-                    ") " +
-                    "CREATE TABLE IF NOT EXISTS item (\n" +
-                    "  id integer NOT NULL AUTO_INCREMENT,\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_ITEM =
+            "CREATE TABLE IF NOT EXISTS item (\n" +
+                    "  id integer primary key autoincrement,\n" +
                     "  title text NOT NULL,\n" +
                     "  link varchar NOT NULL,\n" +
                     "  description text NOT NULL,\n" +
-                    "  guid varchar NOT NULL,\n" +
                     "  pubDate date NOT NULL,\n" +
                     "  geoLat float NOT NULL,\n" +
                     "  geoLong float NOT NULL,\n" +
                     "  condition_id integer NOT NULL,\n" +
-                    "  ,\n" +
-                    "  KEY FK_item_condition (condition_id),\n" +
-                    "  CONSTRAINT FK_item_condition FOREIGN KEY (condition_id) REFERENCES condition (id)\n" +
-                    ") " +
-                    "CREATE TABLE IF NOT EXISTS location (\n" +
+                    " FOREIGN KEY (condition_id) REFERENCES condition (id)\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_LOCATION =
+            "CREATE TABLE IF NOT EXISTS location (\n" +
                     "  id integer primary key autoincrement,\n" +
-                    "  city varchar NOT NULL DEFAULT '0',\n" +
-                    "  region varchar NOT NULL DEFAULT '0',\n" +
-                    "  country varchar NOT NULL DEFAULT '0'\n" +
-                    "  \n" +
-                    ") " +
-                    "CREATE TABLE IF NOT EXISTS units (\n" +
-                    "  id integer primary key autoincrement,\n" +
-                    "  temperature varchar NOT NULL DEFAULT '0',\n" +
-                    "  distance varchar NOT NULL DEFAULT '0',\n" +
-                    "  pressure varchar NOT NULL DEFAULT '0',\n" +
-                    "  speed varchar NOT NULL DEFAULT '0'\n" +
-                    "  \n" +
-                    ") " +
-                    "CREATE TABLE IF NOT EXISTS wind (\n" +
-                    "  id integer primary key autoincrement,\n" +
-                    "  chill integer NOT NULL DEFAULT '0',\n" +
-                    "  direction integer NOT NULL DEFAULT '0',\n" +
-                    "  speed float NOT NULL DEFAULT '0'\n" +
-                    ") \n" +
-                    "CREATE TABLE IF NOT EXISTS city (" +
-                    "  id integer primary key autoincrement,\n" +
-                    "  cityName integer NOT NULL DEFAULT '0',\n" +
-                    "  country varchar NOT NULL" +
-                    "  geoLat float NOT NULL,\n" +
-                    "  geoLong float NOT NULL,\n" +
+                    "  city varchar NOT NULL,\n" +
+                    "  region varchar NOT NULL,\n" +
+                    "  country varchar NOT NULL\n" +
                     "  \n" +
                     ")";
+    public static String SQL_LITE_CREATE_TABLE_UNITS =
+            "CREATE TABLE IF NOT EXISTS units (\n" +
+                    "  id integer primary key autoincrement,\n" +
+                    "  temperature varchar NOT NULL,\n" +
+                    "  distance varchar NOT NULL,\n" +
+                    "  pressure varchar NOT NULL,\n" +
+                    "  speed varchar NOT NULL\n" +
+                    "  \n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_WIND =
+            "CREATE TABLE IF NOT EXISTS wind (\n" +
+                    "  id integer primary key autoincrement,\n" +
+                    "  chill integer NOT NULL,\n" +
+                    "  direction integer NOT NULL,\n" +
+                    "  speed float NOT NULL\n" +
+                    ")";
+    public static String SQL_LITE_CREATE_TABLE_CITY =
+            "CREATE TABLE IF NOT EXISTS city (" +
+                    "  id integer primary key autoincrement,\n" +
+                    "  cityName varchar NOT NULL,\n" +
+                    "  country varchar NOT NULL," +
+                    "  geoLat float,\n" +
+                    "  geoLong float\n" +
+                    "  \n" +
+                    ")";
+
+    public enum ColumnAstronomy {
+        ID("id"), SUNRISE("sunrise"), SUNSET("sunset");
+
+        private String stringValue;
+
+        private ColumnAstronomy(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+
 }
