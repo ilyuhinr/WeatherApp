@@ -1,18 +1,12 @@
 package ru.example.weatherapp;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +16,6 @@ import com.cjj.MaterialRefreshListener;
 import ru.example.weatherapp.database.DBHelper;
 import ru.example.weatherapp.services.ServiceCallbackListener;
 import ru.example.weatherapp.services.ServiceHelper;
-import ru.example.weatherapp.services.WeatherService;
 import ru.example.weatherapp.utils.Constants;
 
 
@@ -51,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbackLi
             @Override
             public void onRefresh(final MaterialRefreshLayout materialRefreshLayout) {
                 isRefreshing = true;
-                Intent intent = mServiceHelper.createIntent(MainActivity.this, "Russia", "Bryansk", 0);
+                Intent intent = mServiceHelper.createIntent(MainActivity.this, "Россия", "Брянск", 0);
                 startService(intent);
             }
 

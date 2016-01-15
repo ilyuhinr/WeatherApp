@@ -3,6 +3,8 @@
  */
 package ru.example.weatherapp.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class Item {
@@ -11,7 +13,7 @@ public class Item {
 
     protected String description;
 
-   // protected String guid;
+    // protected String guid;
 
     protected String pubDate;
 
@@ -20,6 +22,7 @@ public class Item {
     protected float geoLong;
 
     protected Condition condition;
+    @SerializedName("forecast")
     protected List<Forecast> forecasts;
 
     public Item() {

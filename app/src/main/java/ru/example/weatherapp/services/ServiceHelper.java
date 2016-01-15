@@ -6,22 +6,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 
-/**
- * Created by developer on 14.01.2016.
- */
 public class ServiceHelper {
     public static String COUNTRY_EXTRA = "country";
     public static String CITY_EXTRA = "city";
     ServiceCallbackListener mServiceCallbackListener;
 
     public Intent createIntent(final Context context, String country, String city, final int requestId) {
-        Intent i = new Intent(context, WeatherService.class);
-        i.setAction(WeatherService.COMMAND_WEATHER);
+        Intent intent = new Intent(context, WeatherService.class);
+        intent.setAction(WeatherService.COMMAND_WEATHER);
 
-        i.putExtra(COUNTRY_EXTRA, country);
-        //  i.putExtra(SFCommandExecutorService.EXTRA_REQUEST_ID, requestId);
-        i.putExtra(CITY_EXTRA, city);
-        i.putExtra(WeatherService.EXTRA_STATUS_RECEIVER, new ResultReceiver(new Handler()) {
+        intent.putExtra(COUNTRY_EXTRA, country);
+        intent.putExtra(CITY_EXTRA, city);
+        intent.putExtra(WeatherService.EXTRA_STATUS_RECEIVER, new ResultReceiver(new Handler()) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 if (mServiceCallbackListener != null)
@@ -30,10 +26,15 @@ public class ServiceHelper {
 
         });
 
-        return i;
+        return intent;
     }
 
     public void setServiceCallbackListener(ServiceCallbackListener serviceCallbackListener) {
         mServiceCallbackListener = serviceCallbackListener;
+    }
+
+    public static String getURLParams(String country, String city, String tempUnits) {
+        return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" + country + "%2C%20" + city + "%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+
     }
 }

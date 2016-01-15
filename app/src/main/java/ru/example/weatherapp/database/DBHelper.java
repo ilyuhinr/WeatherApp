@@ -8,9 +8,6 @@ import android.os.Build;
 
 import ru.example.weatherapp.utils.Constants;
 
-/**
- * Created by developer on 13.01.2016.
- */
 public class DBHelper extends SQLiteOpenHelper {
 
     public DBHelper(Context context) {

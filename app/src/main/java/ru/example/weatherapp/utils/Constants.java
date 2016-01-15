@@ -6,12 +6,11 @@ import ru.example.weatherapp.database.WeatherProvider;
 
 public class Constants {
 
-    public static String URL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Россия%2C%20Брянск%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     public static String DATABASE_NAME = "weather";
     public static int DATABASE_VERSION = 1;
     public static String ASTRONOMY_TABLE_NAME = "astronomy";
     public static String ATMOSPHERE_TABLE_NAME = "atmosphere";
-    public static String CHANEL_TABLE_NAME = "chanel";
+    public static String CHANEL_TABLE_NAME = "channel";
     public static String CONDITION_TABLE_NAME = "condition";
     public static String FORECAST_TABLE_NAME = "forecast";
     public static String IMAGE_TABLE_NAME = "image";
@@ -24,6 +23,22 @@ public class Constants {
             + WeatherProvider.AUTHORITY + "/" + Constants.CITY_TABLE_NAME);
     public static final Uri ASTRONOMY_CONTENT_URI = Uri.parse("content://"
             + WeatherProvider.AUTHORITY + "/" + Constants.ASTRONOMY_TABLE_NAME);
+    public static final Uri ATMOSPHERE_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.ATMOSPHERE_TABLE_NAME);
+    public static final Uri CONDITION_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.CONDITION_TABLE_NAME);
+    public static final Uri ITEM_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.ITEM_TABLE_NAME);
+    public static final Uri FORECAST_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.FORECAST_TABLE_NAME);
+    public static final Uri LOCATION_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.LOCATION_TABLE_NAME);
+    public static final Uri UNITS_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.UNITS_TABLE_NAME);
+    public static final Uri WIND_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.WIND_TABLE_NAME);
+    public static final Uri CHANNEL_CONTENT_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + Constants.CHANEL_TABLE_NAME);
 
     public static String SQL_LITE_CREATE_TABLE_ASTRONOMY =
             "CREATE TABLE IF NOT EXISTS astronomy (" +
@@ -42,7 +57,7 @@ public class Constants {
                     "  \n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_CHANNEL =
-            "CREATE TABLE IF NOT EXISTS chanel (\n" +
+            "CREATE TABLE IF NOT EXISTS channel (\n" +
                     "  id integer primary key autoincrement,\n" +
                     "  title varchar NOT NULL,\n" +
                     "  link varchar NOT NULL,\n" +
@@ -159,5 +174,124 @@ public class Constants {
         }
     }
 
+    public enum ColumnAtmosphere {
+        ID("id"), HUMIDITY("humidity"), VISIBILITY("visibility"), PRESSURE("pressure"), RISING("rising");
+
+        private String stringValue;
+
+        private ColumnAtmosphere(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnConditions {
+        ID("id"), TEXT("text"), CODE("code"), TEMP("temp"), DATE("date");
+
+        private String stringValue;
+
+        private ColumnConditions(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnItem {
+        ID("id"), LINK("link"), TITLE("title"), DESCR("description"), PUBDATE("pubDate"), LAT("geoLat"), LONG("geoLong"), CONDITION_ID("condition_id");
+
+        private String stringValue;
+
+        private ColumnItem(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnForecast {
+        ID("id"), DAY("day"), DATE("date"), LOW("low"), HIGH("high"), TEXT("text"), CODE("code");
+
+        private String stringValue;
+
+        private ColumnForecast(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnLocation {
+        ID("id"), CITY("city"), REGIION("region"), CONTRY("contry");
+
+        private String stringValue;
+
+        private ColumnLocation(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnUnits {
+        ID("id"), TEMP("temperature"), DISTANCE("distance"), PRESSURE("pressure"), SPEED("speed");
+
+        private String stringValue;
+
+        private ColumnUnits(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnWind {
+        ID("id"), CHILL("chill"), DIRECTION("direction"), SPEED("speed");
+
+        private String stringValue;
+
+        private ColumnWind(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
+
+    public enum ColumnChannel {
+        ID("id"), TITLE("title"), LINK("link"), LANGUAGE("language"), DESCRIPTION("description"), LAST_BUILD_DATE("lastBuildDate"), TTL("ttl"), LOCATION_ID("location_id"), UNITS_ID("units_id"), WIND_ID("wind_id"), ASTRONOMY_ID("astronomy_id"), IMAGE_ID("image_id"), ITEM_ID("item_id"), ATMOSPHERE_ID("atmosphere_id");
+
+        private String stringValue;
+
+        private ColumnChannel(String toString) {
+            stringValue = toString;
+        }
+
+        @Override
+        public String toString() {
+            return stringValue;
+        }
+    }
 
 }

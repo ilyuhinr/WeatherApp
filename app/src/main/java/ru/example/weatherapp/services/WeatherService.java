@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -22,8 +23,12 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ru.example.weatherapp.database.DBHelper;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import ru.example.weatherapp.model.Channel;
+import ru.example.weatherapp.model.Forecast;
 import ru.example.weatherapp.utils.Constants;
 
 public class WeatherService extends IntentService {
@@ -32,6 +37,7 @@ public class WeatherService extends IntentService {
     public static String EXTRA_STATUS_RECEIVER = "receiver";
     public static String COMMAND_WEATHER = "getWeather";
     public static String REQUEST_ERROR_RESPONSE = "error_response";
+    final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy H:mm a Z");
 
     public WeatherService() {
         super("WeatherService");
@@ -54,7 +60,7 @@ public class WeatherService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
         mResultReceiver = intent.getParcelableExtra(EXTRA_STATUS_RECEIVER);
         RequestQueue queue = Volley.newRequestQueue(this);
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, Constants.URL, (String) null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, getURL(intent), (String) null, new Response.Listener<JSONObject>() {
 
             @Override
             public void onResponse(JSONObject jsonObject) {
@@ -65,15 +71,20 @@ public class WeatherService extends IntentService {
                     Gson gson = new Gson();
                     Channel channel = gson.fromJson(jsonChannel.toString(), Channel.class);
                     if (channel != null) {
-                        ContentValues contentValues = new ContentValues();
-                        contentValues.put(Constants.ColumnAstronomy.SUNRISE.toString(), channel.getAstronomy().getSunrise());
-                        contentValues.put(Constants.ColumnAstronomy.SUNSET.toString(), channel.getAstronomy().getSunset());
-                        Uri astronomyUri = getContentResolver().insert(Constants.ASTRONOMY_CONTENT_URI, contentValues);
-                        long idAstronomy = ContentUris.parseId(astronomyUri);
-                        contentValues.clear();
+                        Cursor cursorChannel = getContentResolver().query(Constants.CHANNEL_CONTENT_URI, null, Constants.ColumnChannel.LAST_BUILD_DATE.toString() + "=?", new String[]{channel.getLastBuildDate()}, null);
+                        if (cursorChannel.getCount() > 0) {
+                            if (cursorChannel.moveToFirst()) {
+                                Date date = fromRFC822(channel.getLastBuildDate());
+                            }
+                        } else {
+                            insertResultChannel(channel);
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("message", REQUEST_ERROR_RESPONSE);
+                    getReceiver(intent).send(-1, bundle);
                 }
             }
         }, new Response.ErrorListener() {
@@ -94,8 +105,108 @@ public class WeatherService extends IntentService {
         });
     }
 
+    public void insertResultChannel(Channel channel) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Constants.ColumnAstronomy.SUNRISE.toString(), channel.getAstronomy().getSunrise());
+        contentValues.put(Constants.ColumnAstronomy.SUNSET.toString(), channel.getAstronomy().getSunset());
+        Uri astronomyUri = getContentResolver().insert(Constants.ASTRONOMY_CONTENT_URI, contentValues);
+        long idAstronomy = ContentUris.parseId(astronomyUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnAtmosphere.HUMIDITY.toString(), channel.getAtmosphere().getHumidity());
+        contentValues.put(Constants.ColumnAtmosphere.PRESSURE.toString(), channel.getAtmosphere().getPressure());
+        contentValues.put(Constants.ColumnAtmosphere.RISING.toString(), channel.getAtmosphere().getRising());
+        contentValues.put(Constants.ColumnAtmosphere.VISIBILITY.toString(), channel.getAtmosphere().getVisibility());
+        Uri atmosphereUri = getContentResolver().insert(Constants.ATMOSPHERE_CONTENT_URI, contentValues);
+        long idAtmosphere = ContentUris.parseId(atmosphereUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnConditions.TEXT.toString(), channel.getItem().getCondition().getText());
+        contentValues.put(Constants.ColumnConditions.CODE.toString(), channel.getItem().getCondition().getCode());
+        contentValues.put(Constants.ColumnConditions.TEMP.toString(), channel.getItem().getCondition().getTemp());
+        contentValues.put(Constants.ColumnConditions.DATE.toString(), channel.getItem().getCondition().getDate());
+        Uri conditionsUri = getContentResolver().insert(Constants.CONDITION_CONTENT_URI, contentValues);
+        long idconditions = ContentUris.parseId(conditionsUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnItem.DESCR.toString(), channel.getItem().getDescription());
+        contentValues.put(Constants.ColumnItem.CONDITION_ID.toString(), idconditions);
+        contentValues.put(Constants.ColumnItem.LAT.toString(), channel.getItem().getGeoLat());
+        contentValues.put(Constants.ColumnItem.LONG.toString(), channel.getItem().getGeoLong());
+        contentValues.put(Constants.ColumnItem.LINK.toString(), channel.getItem().getLink());
+        contentValues.put(Constants.ColumnItem.PUBDATE.toString(), channel.getItem().getPubDate());
+        contentValues.put(Constants.ColumnItem.TITLE.toString(), channel.getItem().getTitle());
+        Uri itemUri = getContentResolver().insert(Constants.ITEM_CONTENT_URI, contentValues);
+        long iditem = ContentUris.parseId(itemUri);
+        contentValues.clear();
+        for (Forecast forecast : channel.getItem().getForecasts()) {
+            contentValues.put(Constants.ColumnForecast.CODE.toString(), forecast.getCode());
+            contentValues.put(Constants.ColumnForecast.DATE.toString(), forecast.getDate());
+            contentValues.put(Constants.ColumnForecast.DAY.toString(), forecast.getDay());
+            contentValues.put(Constants.ColumnForecast.HIGH.toString(), forecast.getHigh());
+            contentValues.put(Constants.ColumnForecast.LOW.toString(), forecast.getLow());
+            contentValues.put(Constants.ColumnForecast.TEXT.toString(), forecast.getText());
+            Uri forecastUri = getContentResolver().insert(Constants.FORECAST_CONTENT_URI, contentValues);
+            ContentUris.parseId(forecastUri);
+            contentValues.clear();
+        }
+        contentValues.put(Constants.ColumnLocation.CITY.toString(), channel.getLocation().getCity());
+        contentValues.put(Constants.ColumnLocation.CONTRY.toString(), channel.getLocation().getCountry());
+        contentValues.put(Constants.ColumnLocation.REGIION.toString(), channel.getLocation().getRegion());
+        Uri locationUri = getContentResolver().insert(Constants.LOCATION_CONTENT_URI, contentValues);
+        long idLocation = ContentUris.parseId(locationUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnUnits.DISTANCE.toString(), channel.getUnits().getDistance());
+        contentValues.put(Constants.ColumnUnits.PRESSURE.toString(), channel.getUnits().getPressure());
+        contentValues.put(Constants.ColumnUnits.SPEED.toString(), channel.getUnits().getSpeed());
+        contentValues.put(Constants.ColumnUnits.TEMP.toString(), channel.getUnits().getTemperature());
+        Uri unitsUri = getContentResolver().insert(Constants.UNITS_CONTENT_URI, contentValues);
+        long idUnits = ContentUris.parseId(unitsUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnWind.CHILL.toString(), channel.getWind().getChill());
+        contentValues.put(Constants.ColumnWind.DIRECTION.toString(), channel.getWind().getDirection());
+        contentValues.put(Constants.ColumnWind.SPEED.toString(), channel.getWind().getSpeed());
+        Uri windUri = getContentResolver().insert(Constants.WIND_CONTENT_URI, contentValues);
+        long idWind = ContentUris.parseId(windUri);
+        contentValues.clear();
+        contentValues.put(Constants.ColumnChannel.ASTRONOMY_ID.toString(), idAstronomy);
+        contentValues.put(Constants.ColumnChannel.ATMOSPHERE_ID.toString(), idAtmosphere);
+        contentValues.put(Constants.ColumnChannel.DESCRIPTION.toString(), channel.getDescription());
+        contentValues.put(Constants.ColumnChannel.LINK.toString(), channel.getLink());
+        contentValues.put(Constants.ColumnChannel.IMAGE_ID.toString(), "null");
+        contentValues.put(Constants.ColumnChannel.ITEM_ID.toString(), iditem);
+        contentValues.put(Constants.ColumnChannel.LANGUAGE.toString(), channel.getLanguage());
+        contentValues.put(Constants.ColumnChannel.LAST_BUILD_DATE.toString(), channel.getLastBuildDate());
+        contentValues.put(Constants.ColumnChannel.LOCATION_ID.toString(), idLocation);
+        contentValues.put(Constants.ColumnChannel.TITLE.toString(), channel.getTitle());
+        contentValues.put(Constants.ColumnChannel.TTL.toString(), channel.getTtl());
+        contentValues.put(Constants.ColumnChannel.UNITS_ID.toString(), idUnits);
+        contentValues.put(Constants.ColumnChannel.WIND_ID.toString(), idWind);
+        Uri channelUri = getContentResolver().insert(Constants.CHANNEL_CONTENT_URI, contentValues);
+        long idChannel = ContentUris.parseId(channelUri);
+        contentValues.clear();
+
+
+    }
+
+    public String getURL(Intent intent) {
+        if (intent.getAction().equals(COMMAND_WEATHER)) {
+            return ServiceHelper.getURLParams(intent.getStringExtra(ServiceHelper.COUNTRY_EXTRA), intent.getStringExtra(ServiceHelper.CITY_EXTRA), null);
+        } else {
+            return "";
+        }
+    }
+
     private ResultReceiver getReceiver(Intent intent) {
         return intent.getParcelableExtra(EXTRA_STATUS_RECEIVER);
+    }
+
+    public static Date fromRFC822(final String date) {
+        try {
+            String dates = date.substring(0, date.length() - 7);
+            final SimpleDateFormat format = new SimpleDateFormat("EEE dd MMM yyyy H:mm");
+            return format.parse(dates);
+        } catch (final ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

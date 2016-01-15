@@ -7,7 +7,7 @@ public class Wind {
 
     protected Integer chill;
 
-        protected Integer direction;
+    protected Integer direction;
 
     protected Float speed;
 
