@@ -147,6 +147,7 @@ public class WeatherProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         Log.d(LOG_TAG, "insert, " + uri.toString());
         Uri resultUri = null;
+
         String table = "";
         switch (sUriMatcher.match(uri)) {
             case URI_CHANEL:
@@ -189,7 +190,8 @@ public class WeatherProvider extends ContentProvider {
             SQLiteDatabase sqLiteDatabase = mDatabaseHelper.getWritableDatabase();
             long id = sqLiteDatabase.insert(table, null, values);
             resultUri = ContentUris.withAppendedId(Constants.ASTRONOMY_CONTENT_URI, id);
-            getContext().getContentResolver().notifyChange(resultUri, null, false);
+            getContext().getContentResolver().notifyChange(Uri.parse("content://"
+                    + WeatherProvider.AUTHORITY + "/" + table), null, false);
         }
         return resultUri;
     }

@@ -5,7 +5,9 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -26,6 +28,10 @@ import ru.example.weatherapp.utils.Constants;
 
 public class WeatherService extends IntentService {
     private String LOG_TAG = getClass().getName();
+    private ResultReceiver mResultReceiver;
+    public static String EXTRA_STATUS_RECEIVER = "receiver";
+    public static String COMMAND_WEATHER = "getWeather";
+    public static String REQUEST_ERROR_RESPONSE = "error_response";
 
     public WeatherService() {
         super("WeatherService");
@@ -45,7 +51,8 @@ public class WeatherService extends IntentService {
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
+    protected void onHandleIntent(final Intent intent) {
+        mResultReceiver = intent.getParcelableExtra(EXTRA_STATUS_RECEIVER);
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, Constants.URL, (String) null, new Response.Listener<JSONObject>() {
 
@@ -73,6 +80,9 @@ public class WeatherService extends IntentService {
 
             @Override
             public void onErrorResponse(VolleyError volleyError) {
+                Bundle bundle = new Bundle();
+                bundle.putString("message", REQUEST_ERROR_RESPONSE);
+                getReceiver(intent).send(-1, bundle);
             }
         });
         queue.add(request);
@@ -84,5 +94,8 @@ public class WeatherService extends IntentService {
         });
     }
 
+    private ResultReceiver getReceiver(Intent intent) {
+        return intent.getParcelableExtra(EXTRA_STATUS_RECEIVER);
+    }
 
 }

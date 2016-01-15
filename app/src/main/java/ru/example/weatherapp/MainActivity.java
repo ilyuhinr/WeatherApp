@@ -20,14 +20,19 @@ import com.cjj.MaterialRefreshLayout;
 import com.cjj.MaterialRefreshListener;
 
 import ru.example.weatherapp.database.DBHelper;
+import ru.example.weatherapp.services.ServiceCallbackListener;
+import ru.example.weatherapp.services.ServiceHelper;
 import ru.example.weatherapp.services.WeatherService;
 import ru.example.weatherapp.utils.Constants;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ServiceCallbackListener {
     private String LOG_TAG = this.getClass().getName();
     public static Handler mUiHandler = null;
     private ContentObserver mObserver;
+    MaterialRefreshLayout mMaterialRefreshLayout;
+    ServiceHelper mServiceHelper;
+    private boolean isRefreshing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +43,15 @@ public class MainActivity extends AppCompatActivity {
         final SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        final MaterialRefreshLayout materialRefreshLayout = (MaterialRefreshLayout) findViewById(R.id.refresh);
-        materialRefreshLayout.setMaterialRefreshListener(new MaterialRefreshListener() {
+        mServiceHelper = new ServiceHelper();
+        mServiceHelper.setServiceCallbackListener(this);
+
+        mMaterialRefreshLayout = (MaterialRefreshLayout) findViewById(R.id.refresh);
+        mMaterialRefreshLayout.setMaterialRefreshListener(new MaterialRefreshListener() {
             @Override
             public void onRefresh(final MaterialRefreshLayout materialRefreshLayout) {
-                Intent intent = new Intent(MainActivity.this, WeatherService.class);
+                isRefreshing = true;
+                Intent intent = mServiceHelper.createIntent(MainActivity.this, "Russia", "Bryansk", 0);
                 startService(intent);
             }
 
@@ -51,32 +60,30 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        materialRefreshLayout.setWaveColor(0x903F51B5);
-        materialRefreshLayout.setIsOverLay(false);
-        materialRefreshLayout.setWaveShow(true);
+        mMaterialRefreshLayout.setWaveColor(0x903F51B5);
+        mMaterialRefreshLayout.setIsOverLay(false);
+        mMaterialRefreshLayout.setWaveShow(true);
 
         mObserver = new ContentObserver(new Handler()) {
             public void onChange(boolean selfChange) {
-                materialRefreshLayout.finishRefresh();
+                isRefreshing = false;
+                mMaterialRefreshLayout.finishRefresh();
                 Toast.makeText(MainActivity.this, "ContentObserver", Toast.LENGTH_LONG).show();
             }
         };
         getContentResolver().registerContentObserver(Constants.ASTRONOMY_CONTENT_URI, true, mObserver);
 
+
     }
 
-    public void buildUIHandler() {
-        mUiHandler = new Handler() {
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case 0:
-                        Toast.makeText(MainActivity.this, msg.obj.toString(), Toast.LENGTH_LONG).show();
-                        break;
 
-                    default:
-                        break;
-                }
+    @Override
+    public void onServiceCallback(int requestId, int resultCode, Bundle data) {
+        if (resultCode == -1) {
+            if (isRefreshing) {
+                mMaterialRefreshLayout.finishRefresh();
+                Toast.makeText(this, "Произошла ошибка при получении данных. Повторите попытку позже!", Toast.LENGTH_LONG).show();
             }
-        };
+        }
     }
 }
