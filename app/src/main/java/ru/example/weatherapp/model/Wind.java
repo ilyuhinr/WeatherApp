@@ -24,4 +24,15 @@ public class Wind {
         return speed;
     }
 
+    public void setChill(Integer chill) {
+        this.chill = chill;
+    }
+
+    public void setDirection(Integer direction) {
+        this.direction = direction;
+    }
+
+    public void setSpeed(Float speed) {
+        this.speed = speed;
+    }
 }

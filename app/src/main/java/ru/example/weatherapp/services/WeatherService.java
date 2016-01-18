@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import ru.example.weatherapp.model.Channel;
 import ru.example.weatherapp.model.Forecast;
@@ -36,8 +37,9 @@ public class WeatherService extends IntentService {
     private ResultReceiver mResultReceiver;
     public static String EXTRA_STATUS_RECEIVER = "receiver";
     public static String COMMAND_WEATHER = "getWeather";
+    public static String COMMAND_WEATHER_CITY = "getWeatherCity";
     public static String REQUEST_ERROR_RESPONSE = "error_response";
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy H:mm a Z");
+    public static String REQUEST_SUCCESS_RESPONSE = "success_response";
 
     public WeatherService() {
         super("WeatherService");
@@ -65,16 +67,32 @@ public class WeatherService extends IntentService {
             @Override
             public void onResponse(JSONObject jsonObject) {
                 try {
+
+
                     JSONObject jsonQuery = jsonObject.getJSONObject("query");
                     JSONObject jsonResults = jsonQuery.getJSONObject("results");
                     JSONObject jsonChannel = jsonResults.getJSONObject("channel");
                     Gson gson = new Gson();
                     Channel channel = gson.fromJson(jsonChannel.toString(), Channel.class);
                     if (channel != null) {
-                        Cursor cursorChannel = getContentResolver().query(Constants.CHANNEL_CONTENT_URI, null, Constants.ColumnChannel.LAST_BUILD_DATE.toString() + "=?", new String[]{channel.getLastBuildDate()}, null);
+                        Cursor cursorChannel = getContentResolver().query(Constants.CHANNEL_CONTENT_URI, null, "loc.country=? and loc.city=?", new String[]{String.valueOf(channel.getLocation().getCountry()), String.valueOf(channel.getLocation().getCity())}, null);
                         if (cursorChannel.getCount() > 0) {
                             if (cursorChannel.moveToFirst()) {
-                                Date date = fromRFC822(channel.getLastBuildDate());
+                                Date date = getDataFromString(channel.getLastBuildDate());
+                                Date dateResponse = getDataFromString(cursorChannel.getString(cursorChannel.getColumnIndex(Constants.ColumnChannel.LAST_BUILD_DATE.toString())));
+                                long oldChannelId = cursorChannel.getLong(cursorChannel.getColumnIndex(Constants.ColumnChannel.ID.toString()));
+                                cursorChannel.close();
+                                if (date.equals(dateResponse)) {
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("message", REQUEST_SUCCESS_RESPONSE);
+                                    if (intent.getAction().equals(COMMAND_WEATHER_CITY)) {
+                                        getReceiver(intent).send(200, bundle);
+                                    } else {
+                                        getReceiver(intent).send(100, bundle);
+                                    }
+                                } else {
+                                    updateResultChannel(channel, oldChannelId);
+                                }
                             }
                         } else {
                             insertResultChannel(channel);
@@ -103,6 +121,12 @@ public class WeatherService extends IntentService {
                 Log.i(LOG_TAG, "request " + request.getUrl() + " finished!");
             }
         });
+    }
+
+    public void updateResultChannel(Channel channel, long oldChannelId) {
+        if (getContentResolver().delete(Constants.DELETE_ALL_URI, null, new String[]{String.valueOf(oldChannelId)}) == 1) {
+            insertResultChannel(channel);
+        }
     }
 
     public void insertResultChannel(Channel channel) {
@@ -143,13 +167,14 @@ public class WeatherService extends IntentService {
             contentValues.put(Constants.ColumnForecast.HIGH.toString(), forecast.getHigh());
             contentValues.put(Constants.ColumnForecast.LOW.toString(), forecast.getLow());
             contentValues.put(Constants.ColumnForecast.TEXT.toString(), forecast.getText());
+            contentValues.put(Constants.ColumnForecast.ITEM_ID.toString(), iditem);
             Uri forecastUri = getContentResolver().insert(Constants.FORECAST_CONTENT_URI, contentValues);
             ContentUris.parseId(forecastUri);
             contentValues.clear();
         }
         contentValues.put(Constants.ColumnLocation.CITY.toString(), channel.getLocation().getCity());
-        contentValues.put(Constants.ColumnLocation.CONTRY.toString(), channel.getLocation().getCountry());
-        contentValues.put(Constants.ColumnLocation.REGIION.toString(), channel.getLocation().getRegion());
+        contentValues.put(Constants.ColumnLocation.COUNTRY.toString(), channel.getLocation().getCountry());
+        contentValues.put(Constants.ColumnLocation.REGION.toString(), channel.getLocation().getRegion());
         Uri locationUri = getContentResolver().insert(Constants.LOCATION_CONTENT_URI, contentValues);
         long idLocation = ContentUris.parseId(locationUri);
         contentValues.clear();
@@ -162,7 +187,7 @@ public class WeatherService extends IntentService {
         contentValues.clear();
         contentValues.put(Constants.ColumnWind.CHILL.toString(), channel.getWind().getChill());
         contentValues.put(Constants.ColumnWind.DIRECTION.toString(), channel.getWind().getDirection());
-        contentValues.put(Constants.ColumnWind.SPEED.toString(), channel.getWind().getSpeed());
+        contentValues.put(Constants.ColumnWind.SPEED.toString(), String.valueOf(channel.getWind().getSpeed()));
         Uri windUri = getContentResolver().insert(Constants.WIND_CONTENT_URI, contentValues);
         long idWind = ContentUris.parseId(windUri);
         contentValues.clear();
@@ -170,7 +195,6 @@ public class WeatherService extends IntentService {
         contentValues.put(Constants.ColumnChannel.ATMOSPHERE_ID.toString(), idAtmosphere);
         contentValues.put(Constants.ColumnChannel.DESCRIPTION.toString(), channel.getDescription());
         contentValues.put(Constants.ColumnChannel.LINK.toString(), channel.getLink());
-        contentValues.put(Constants.ColumnChannel.IMAGE_ID.toString(), "null");
         contentValues.put(Constants.ColumnChannel.ITEM_ID.toString(), iditem);
         contentValues.put(Constants.ColumnChannel.LANGUAGE.toString(), channel.getLanguage());
         contentValues.put(Constants.ColumnChannel.LAST_BUILD_DATE.toString(), channel.getLastBuildDate());
@@ -182,12 +206,10 @@ public class WeatherService extends IntentService {
         Uri channelUri = getContentResolver().insert(Constants.CHANNEL_CONTENT_URI, contentValues);
         long idChannel = ContentUris.parseId(channelUri);
         contentValues.clear();
-
-
     }
 
     public String getURL(Intent intent) {
-        if (intent.getAction().equals(COMMAND_WEATHER)) {
+        if (intent.getAction().equals(COMMAND_WEATHER) || intent.getAction().equals(COMMAND_WEATHER_CITY)) {
             return ServiceHelper.getURLParams(intent.getStringExtra(ServiceHelper.COUNTRY_EXTRA), intent.getStringExtra(ServiceHelper.CITY_EXTRA), null);
         } else {
             return "";
@@ -198,11 +220,10 @@ public class WeatherService extends IntentService {
         return intent.getParcelableExtra(EXTRA_STATUS_RECEIVER);
     }
 
-    public static Date fromRFC822(final String date) {
+    public static Date getDataFromString(final String date) {
         try {
-            String dates = date.substring(0, date.length() - 7);
-            final SimpleDateFormat format = new SimpleDateFormat("EEE dd MMM yyyy H:mm");
-            return format.parse(dates);
+            final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm a", Locale.ENGLISH);
+            return format.parse(date);
         } catch (final ParseException e) {
             e.printStackTrace();
         }

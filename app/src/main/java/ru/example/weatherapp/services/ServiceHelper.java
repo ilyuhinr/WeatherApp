@@ -11,10 +11,9 @@ public class ServiceHelper {
     public static String CITY_EXTRA = "city";
     ServiceCallbackListener mServiceCallbackListener;
 
-    public Intent createIntent(final Context context, String country, String city, final int requestId) {
+    public Intent createIntent(final Context context, String country, String city, final int requestId, String action) {
         Intent intent = new Intent(context, WeatherService.class);
-        intent.setAction(WeatherService.COMMAND_WEATHER);
-
+        intent.setAction(action);
         intent.putExtra(COUNTRY_EXTRA, country);
         intent.putExtra(CITY_EXTRA, city);
         intent.putExtra(WeatherService.EXTRA_STATUS_RECEIVER, new ResultReceiver(new Handler()) {
@@ -34,7 +33,12 @@ public class ServiceHelper {
     }
 
     public static String getURLParams(String country, String city, String tempUnits) {
-        return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" + country + "%2C%20" + city + "%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+        if (city.toUpperCase().contains("Санкт")) {
+            city = "St. Petersburg";
+        }
+        country = country.replace(" ", "%20");
+        city = city.replace(" ", "%20");
+        return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" + country + "%2C%20" + city + "%22)%20and%20u%20%3D%20'c'&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
 
     }
 }

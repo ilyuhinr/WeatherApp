@@ -39,6 +39,10 @@ public class Constants {
             + WeatherProvider.AUTHORITY + "/" + Constants.WIND_TABLE_NAME);
     public static final Uri CHANNEL_CONTENT_URI = Uri.parse("content://"
             + WeatherProvider.AUTHORITY + "/" + Constants.CHANEL_TABLE_NAME);
+    public static final Uri DELETE_ALL_URI = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + CHANEL_TABLE_NAME + "/deleteAll");
+    public static final Uri QUERY_CHANNEL_MODEL = Uri.parse("content://"
+            + WeatherProvider.AUTHORITY + "/" + CHANEL_TABLE_NAME + "/model");
 
     public static String SQL_LITE_CREATE_TABLE_ASTRONOMY =
             "CREATE TABLE IF NOT EXISTS astronomy (" +
@@ -59,8 +63,8 @@ public class Constants {
     public static String SQL_LITE_CREATE_TABLE_CHANNEL =
             "CREATE TABLE IF NOT EXISTS channel (\n" +
                     "  id integer primary key autoincrement,\n" +
-                    "  title varchar NOT NULL,\n" +
-                    "  link varchar NOT NULL,\n" +
+                    "  title text NOT NULL,\n" +
+                    "  link text NOT NULL,\n" +
                     "  language varchar NOT NULL,\n" +
                     "  description text NOT NULL,\n" +
                     "  lastBuildDate date NOT NULL,\n" +
@@ -69,16 +73,16 @@ public class Constants {
                     "  units_id integer DEFAULT NULL,\n" +
                     "  wind_id integer DEFAULT NULL,\n" +
                     "  astronomy_id integer DEFAULT NULL,\n" +
-                    "  image_id integer DEFAULT NULL,\n" +
+                    //  "  image_id integer DEFAULT NULL,\n" +
                     "  item_id integer DEFAULT NULL,\n" +
                     "  atmosphere_id integer DEFAULT NULL,\n" +
-                    "  FOREIGN KEY (astronomy_id) REFERENCES astronomy (id),\n" +
-                    "  FOREIGN KEY (atmosphere_id) REFERENCES atmosphere (id),\n" +
-                    "  FOREIGN KEY (image_id) REFERENCES image (id),\n" +
-                    "  FOREIGN KEY (item_id) REFERENCES item (id),\n" +
-                    "  FOREIGN KEY (location_id) REFERENCES location (id),\n" +
-                    "  FOREIGN KEY (units_id) REFERENCES units (id),\n" +
-                    "  FOREIGN KEY (wind_id) REFERENCES wind (id)\n" +
+                    "  FOREIGN KEY (astronomy_id) REFERENCES astronomy (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    "  FOREIGN KEY (atmosphere_id) REFERENCES atmosphere (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    //  "  FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    "  FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    "  FOREIGN KEY (location_id) REFERENCES location (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    "  FOREIGN KEY (units_id) REFERENCES units (id) ON DELETE SET NULL ON UPDATE CASCADE,\n" +
+                    "  FOREIGN KEY (wind_id) REFERENCES wind (id) ON DELETE SET NULL ON UPDATE CASCADE\n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_CONDITION =
             "CREATE TABLE IF NOT EXISTS condition (\n" +
@@ -100,7 +104,7 @@ public class Constants {
                     "  text text NOT NULL,\n" +
                     "  code integer NOT NULL,\n" +
                     "  item_id integer NOT NULL,\n" +
-                    "  FOREIGN KEY (item_id) REFERENCES item (id)\n" +
+                    "  FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE SET NULL ON UPDATE CASCADE\n" +
                     "  \n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_IMAGE =
@@ -122,15 +126,15 @@ public class Constants {
                     "  pubDate date NOT NULL,\n" +
                     "  geoLat float NOT NULL,\n" +
                     "  geoLong float NOT NULL,\n" +
-                    "  condition_id integer NOT NULL,\n" +
-                    " FOREIGN KEY (condition_id) REFERENCES condition (id)\n" +
+                    "  condition_id integer,\n" +
+                    " FOREIGN KEY (condition_id) REFERENCES condition (id) ON DELETE SET NULL ON UPDATE CASCADE\n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_LOCATION =
             "CREATE TABLE IF NOT EXISTS location (\n" +
                     "  id integer primary key autoincrement,\n" +
-                    "  city varchar NOT NULL,\n" +
-                    "  region varchar NOT NULL,\n" +
-                    "  country varchar NOT NULL\n" +
+                    "  city text,\n" +
+                    "  region varchar,\n" +
+                    "  country text\n" +
                     "  \n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_UNITS =
@@ -138,8 +142,8 @@ public class Constants {
                     "  id integer primary key autoincrement,\n" +
                     "  temperature varchar NOT NULL,\n" +
                     "  distance varchar NOT NULL,\n" +
-                    "  pressure varchar NOT NULL,\n" +
-                    "  speed varchar NOT NULL\n" +
+                    "  pressure_unit varchar NOT NULL,\n" +
+                    "  speed_unit varchar NOT NULL\n" +
                     "  \n" +
                     ")";
     public static String SQL_LITE_CREATE_TABLE_WIND =
@@ -158,6 +162,11 @@ public class Constants {
                     "  geoLong float\n" +
                     "  \n" +
                     ")";
+
+    public static String INSERT_START_APP =
+            "INSERT INTO " + CITY_TABLE_NAME + " (cityName, country, geoLat, geoLong) " +
+                    "VALUES ('Moscow', 'Russia', '0.0', '0.0'), " +
+                    "('St. Petersburg', 'Russia', '0.0', '0.0')";
 
     public enum ColumnAstronomy {
         ID("id"), SUNRISE("sunrise"), SUNSET("sunset");
@@ -220,7 +229,7 @@ public class Constants {
     }
 
     public enum ColumnForecast {
-        ID("id"), DAY("day"), DATE("date"), LOW("low"), HIGH("high"), TEXT("text"), CODE("code");
+        ID("id"), DAY("day"), DATE("date"), LOW("low"), HIGH("high"), TEXT("text"), CODE("code"), ITEM_ID("item_id");
 
         private String stringValue;
 
@@ -235,7 +244,7 @@ public class Constants {
     }
 
     public enum ColumnLocation {
-        ID("id"), CITY("city"), REGIION("region"), CONTRY("contry");
+        ID("id"), CITY("city"), REGION("region"), COUNTRY("country");
 
         private String stringValue;
 
@@ -250,7 +259,7 @@ public class Constants {
     }
 
     public enum ColumnUnits {
-        ID("id"), TEMP("temperature"), DISTANCE("distance"), PRESSURE("pressure"), SPEED("speed");
+        ID("id"), TEMP("temperature"), DISTANCE("distance"), PRESSURE("pressure_unit"), SPEED("speed_unit");
 
         private String stringValue;
 
@@ -280,7 +289,8 @@ public class Constants {
     }
 
     public enum ColumnChannel {
-        ID("id"), TITLE("title"), LINK("link"), LANGUAGE("language"), DESCRIPTION("description"), LAST_BUILD_DATE("lastBuildDate"), TTL("ttl"), LOCATION_ID("location_id"), UNITS_ID("units_id"), WIND_ID("wind_id"), ASTRONOMY_ID("astronomy_id"), IMAGE_ID("image_id"), ITEM_ID("item_id"), ATMOSPHERE_ID("atmosphere_id");
+        ID("id"), TITLE("title"), LINK("link"), LANGUAGE("language"), DESCRIPTION("description"), LAST_BUILD_DATE("lastBuildDate"), TTL("ttl"), LOCATION_ID("location_id"),
+        UNITS_ID("units_id"), WIND_ID("wind_id"), ASTRONOMY_ID("astronomy_id"), IMAGE_ID("image_id"), ITEM_ID("item_id"), ATMOSPHERE_ID("atmosphere_id");
 
         private String stringValue;
 

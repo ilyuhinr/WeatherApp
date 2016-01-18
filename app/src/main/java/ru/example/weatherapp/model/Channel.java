@@ -81,4 +81,55 @@ public class Channel {
     }
 
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setLastBuildDate(String lastBuildDate) {
+        this.lastBuildDate = lastBuildDate;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    public void setUnits(Units units) {
+        this.units = units;
+    }
+
+    public void setWind(Wind wind) {
+        this.wind = wind;
+    }
+
+    public void setAstronomy(Astronomy astronomy) {
+        this.astronomy = astronomy;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public void setAtmosphere(Atmosphere atmosphere) {
+        this.atmosphere = atmosphere;
+    }
 }

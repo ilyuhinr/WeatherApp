@@ -31,4 +31,15 @@ public class Location {
         return country;
     }
 
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
 }
